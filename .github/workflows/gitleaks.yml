@@ -4,6 +4,7 @@ on:
   workflow_call:
     inputs:
       severity:
+        description: "Minimum severity level to fail the pipeline (low | medium | high)"
         required: false
         type: string
         default: high
@@ -14,43 +15,49 @@ permissions:
 
 jobs:
   scan-secrets:
-    name: GitLeaks Security Scan
+    name: Gitleaks Security Scan
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: Code-Syndicate-Latam/checkout@v4.3.1
         with:
           fetch-depth: 0
 
       - name: Validate severity input
+        shell: bash
         run: |
-          if [[ "${{ inputs.severity }}" != "low" && "${{ inputs.severity }}" != "medium" && "${{ inputs.severity }}" != "high" ]]; then
-            echo "❌ Invalid severity input: ${{ inputs.severity }}"
-            exit 1
-          fi
+          case "${{ inputs.severity }}" in
+            low|medium|high)
+              echo "Severity '${{ inputs.severity }}' is valid"
+              ;;
+            *)
+              echo "❌ Invalid severity input: '${{ inputs.severity }}'"
+              echo "Allowed values: low | medium | high"
+              exit 1
+              ;;
+          esac
 
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
         id: gitleaks
+        uses: Code-Syndicate-Latam/gitleaks-action@v2.3.9
         with:
           gitleaks_version: "v8.21.2"
           severity: ${{ inputs.severity }}
           no-banner: false
-          exit-code: 1
           verbose: true
+          exit-code: 1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Fail workflow if leaks found
         if: failure()
+        shell: bash
         run: |
-          echo "❌ SECRETOS DETECTADOS - BLOCKING MERGE ❌"
-          echo "Se encontraron ${{ steps.gitleaks.outputs.findingCount }} secretos en el código"
+          echo "❌ SECRETOS DETECTADOS – MERGE BLOQUEADO"
           echo ""
-          echo "Revisa los logs de arriba para ver detalles específicos"
-          echo "o corre GitLeaks localmente para debuggear:"
-          echo "npx gitleaks detect --source . --verbose"
+          echo "Revisa los logs del paso 'Run Gitleaks' para más detalles."
           exit 1
 
 
