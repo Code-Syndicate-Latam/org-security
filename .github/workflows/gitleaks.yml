@@ -9,8 +9,6 @@ on:
         type: string
         default: high
     secrets:
-      GITHUB_TOKEN:
-        required: true
       GITLEAKS_LICENSE:
         required: true
         
@@ -53,7 +51,7 @@ jobs:
           verbose: true
           exit-code: 1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.github_token }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Fail workflow if leaks found
