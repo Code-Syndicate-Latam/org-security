@@ -7,9 +7,6 @@ on:
         description: "Path to the CodeQL configuration file"
         required: false
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
   analyze:
