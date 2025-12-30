@@ -32,6 +32,8 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           config-file: ${{ inputs.config-file }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
 
       - name: Autobuild
         uses: Code-Syndicate-Latam/codeql-autobuild@v4.31.9
