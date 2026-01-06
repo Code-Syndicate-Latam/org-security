@@ -1,0 +1,9 @@
+repos:
+  - repo: git@github.com:Code-Syndicate-Latam/org-security-gitleaks.git
+    rev: v8.21.0
+    hooks:
+      - id: gitleaks
+        name: Gitleaks - Prevent secrets
+        args:
+          - "--redact"
+          - "--config=.gitleaks.toml"
