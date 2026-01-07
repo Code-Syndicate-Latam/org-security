@@ -2,19 +2,10 @@ name: gitleaks-security-gate
 
 on:
   workflow_call:
-    inputs:
-      severity:
-        description: "Minimum severity level to fail the pipeline (low | medium | high)"
-        required: false
-        type: string
-        default: high
-    secrets:
-      GITLEAKS_LICENSE:
-        required: true
-        
+
 permissions:
   contents: read
-  pull-requests: write
+  packages: read
 
 jobs:
   scan-secrets:
@@ -24,43 +15,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: Code-Syndicate-Latam/checkout@v4.3.1
-        with:
-          fetch-depth: 0
 
-      - name: Validate severity input
-        shell: bash
+      - name: Run Gitleaks (blocking)
         run: |
-          case "${{ inputs.severity }}" in
-            low|medium|high)
-              echo "Severity '${{ inputs.severity }}' is valid"
-              ;;
-            *)
-              echo "❌ Invalid severity input: '${{ inputs.severity }}'"
-              echo "Allowed values: low | medium | high"
-              exit 1
-              ;;
-          esac
+          docker run \
+            -v "${PWD}:/repo" \
+            -w /repo \
+            ghcr.io/code-syndicate-latam/gitleaks:v8.21.2 \
+            detect \
+            --no-git \
+            --source . \
+            --report-path gitleaks-report.json \
+            --report-format json
 
-      - name: Run Gitleaks
-        id: gitleaks
-        uses: Code-Syndicate-Latam/gitleaks-action@v2.3.9
+      - name: Upload Gitleaks report
+        if: always()
+        uses: Code-Syndicate-Latam/upload-artifact@v4.6.2
         with:
-          gitleaks_version: "v8.21.2"
-          severity: ${{ inputs.severity }}
-          no-banner: false
-          verbose: true
-          exit-code: 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          name: gitleaks-report
+          path: gitleaks-report.json
 
-      - name: Fail workflow if leaks found
-        if: failure()
-        shell: bash
-        run: |
-          echo "❌ SECRETOS DETECTADOS – MERGE BLOQUEADO"
-          echo ""
-          echo "Revisa los logs del paso 'Run Gitleaks' para más detalles."
-          exit 1
 
 
