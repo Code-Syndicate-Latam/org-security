@@ -23,8 +23,8 @@ jobs:
 
       - name: Tag image for organization registry
         run: |
-          docker tag zricethezav/gitleaks:v8.21.2 ghcr.io/myorg/gitleaks:v8.21.2
+          docker tag zricethezav/gitleaks:v8.21.2 ghcr.io/Code-Syndicate-Latam/gitleaks:v8.21.2
 
       - name: Push image to GHCR
         run: |
-          docker push ghcr.io/myorg/gitleaks:v8.21.2
+          docker push ghcr.io/Code-Syndicate-Latam/gitleaks:v8.21.2
